@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Web3 x AI 信任实验室</title>
+    <script src="./tailwind.js"></script>
+    <script src="./vue.global.js"></script>
+    <script src="./crypto-js.min.js"></script>
+    <style>
+        body { background-color: #0a0a1a; color: #e2e8f0; font-family: 'Courier New', Courier, monospace; }
+        .neon-text { text-shadow: 0 0 5px #06b6d4, 0 0 10px #06b6d4; }
+        .neon-border { box-shadow: 0 0 10px #06b6d4 inset, 0 0 10px #06b6d4; border: 1px solid #06b6d4; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(10px); }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+<div id="app" class="w-full max-w-md relative h-[85vh] flex flex-col">
+    
+    <div class="text-center mb-4">
+        <h1 class="text-2xl font-bold text-cyan-400 neon-text">Web3 x AI 实验室</h1>
+        <p class="text-xs text-gray-400 mt-1">SJTU Blockchain Association</p>
+    </div>
+
+    <div class="flex-grow flex flex-col bg-gray-800/60 rounded-xl neon-border p-4 overflow-y-auto relative">
+        <transition name="fade" mode="out-in">
+            
+            <div v-if="step === 1" class="flex flex-col h-full" key="step1">
+                <h2 class="text-lg font-bold text-red-400 mb-3">⚠️ 危机：消失的资金</h2>
+                <p class="text-xs text-gray-300 mb-4">你部署了 5 个 AI Agent 管理公司供应链，但审计时发现账目对不上了...</p>
+                
+                <div class="space-y-2 text-xs flex-grow">
+                    <div class="bg-gray-700 p-2 rounded border-l-2 border-blue-400">🤖 采购Agent: "下单设备数量：100。"</div>
+                    <div class="bg-gray-700 p-2 rounded border-l-2 border-green-400">🤖 物流Agent: "运输设备数量：100。"</div>
+                    <div class="bg-gray-700 p-2 rounded border-l-2 border-yellow-400">🤖 仓储Agent: "入库设备数量：80。" <span class="text-red-400">(偷偷篡改了本地日志)</span></div>
+                    <div class="bg-gray-700 p-2 rounded border-l-2 border-purple-400">🤖 财务Agent: "根据物流记录，打款金额：100万。"</div>
+                    <div class="bg-red-900/50 p-2 rounded border-l-2 border-red-500">🤖 审计Agent: "警告！仓库少了 20 台，钱却全付了！"</div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-900 border border-red-500/50 rounded text-xs text-red-300">
+                    💡 痛点：每个 Agent 的“本地数据库”互不相通，互相推诿。没有公共账本，多 Agent 系统极易崩溃！
+                </div>
+            </div>
+
+            <div v-else-if="step === 2" class="flex flex-col h-full" key="step2">
+                <h2 class="text-lg font-bold text-cyan-400 mb-3">🔑 破局第一步：数字指纹</h2>
+                <p class="text-[11px] text-gray-300 mb-4 leading-relaxed">为了防止 Agent 篡改数据，我们引入了密码学哈希（Hash）。它就像数据的指纹，内容变动一点，指纹全变。</p>
+                
+                <div class="space-y-5 flex-grow">
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-600 shadow-inner">
+                        <label class="block text-xs text-cyan-400 mb-2 font-bold"><strong class="text-cyan-300">尝试修改下方的数字看看：</strong></label>
+                        <div class="relative w-full">
+                            <textarea v-model="hashDemoText" 
+                                      class="w-full bg-black border-2 border-cyan-400 rounded-md pl-2 pr-8 py-2 text-cyan-200 text-xs outline-none focus:ring-1 focus:ring-white shadow-[0_0_10px_rgba(6,182,212,0.8)] animate-pulse font-bold transition-all resize-none" 
+                                      rows="2"></textarea>
+                            <span class="absolute right-2 top-2 pointer-events-none text-sm opacity-80">
+                                ✏️
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-600">
+                        <label class="block text-xs text-gray-400 mb-2">实时 SHA-256 指纹：</label>
+                        <div class="bg-black p-2 rounded border border-gray-700">
+                            <div class="text-green-400 font-mono text-[11px] break-all leading-relaxed">
+                                {{ demoHash }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-2.5 bg-cyan-900/30 border border-cyan-800 rounded-md text-[11px] text-cyan-200 shadow-sm">
+                    💡 哪怕只改动一个数字，哈希值都会发生雪崩式的改变，篡改者无处遁形！
+                </div>
+            </div>
+
+            <div v-else-if="step === 3" class="flex flex-col h-full" key="step3">
+                <h2 class="text-lg font-bold text-cyan-400 mb-1">🔗 破局第二步：区块成链</h2>
+                <p class="text-[10px] text-gray-300 mb-3 leading-tight">区块链规则：下一个区块的“前块哈希”必须与上一个区块的“本块哈希”完全相等。<strong class="text-cyan-300">尝试把区块 #2 的数字改成 80！</strong></p>
+                
+                <div class="flex-grow flex flex-col justify-start space-y-1.5">
+                    
+                    <div class="bg-gray-900 border-2 border-cyan-500 rounded p-1.5 text-[10px] font-mono shadow-sm">
+                        <div class="text-cyan-400 font-bold mb-0.5">📦 区块 #1 (物流节点)</div>
+                        
+                        <div class="flex justify-between items-center mb-1 pb-0.5 border-b border-gray-700">
+                            <span class="text-gray-400">前块哈希:</span>
+                            <span class="text-green-400 bg-black px-1 rounded">0000000000</span>
+                        </div>
+                        
+                        <div class="flex items-center my-1">
+                            <span class="text-gray-400 w-8">数据:</span> 
+                            <span class="text-white">运输设备数量：100</span>
+                        </div>
+                        
+                        <div class="bg-black border-gray-700 flex justify-between items-center p-0.5 px-1 rounded border">
+                            <span class="text-gray-400">本块哈希:</span>
+                            <span class="text-green-400">{{ hash1 }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="bg-cyan-950/40 border border-cyan-500/50 rounded p-1 w-11/12 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                            <div class="text-[8px] text-cyan-300 text-center font-bold">✅ 哈希完全相等</div>
+                            <div class="flex justify-center items-center space-x-1 font-mono text-[10px] mt-0.5">
+                                <div class="flex flex-col items-center w-[45%]">
+                                    <span class="text-[7px] text-gray-500">区#1 本块哈希</span>
+                                    <span class="text-green-400 break-all">{{ hash1 }}</span>
+                                </div>
+                                <span class="text-cyan-400 font-bold text-sm">=</span>
+                                <div class="flex flex-col items-center w-[45%]">
+                                    <span class="text-[7px] text-gray-500">区#2 前块哈希</span>
+                                    <span class="text-green-400 break-all">{{ hash1 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div :class="isLinkBroken ? 'border-red-500 bg-red-900/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-cyan-500 bg-gray-900'" class="border-2 rounded p-1.5 text-[10px] font-mono transition-colors shadow-sm">
+                        <div class="font-bold mb-0.5" :class="isLinkBroken ? 'text-red-400' : 'text-cyan-400'">📦 区块 #2 (仓储节点)</div>
+                        
+                        <div class="flex justify-between items-center mb-1 pb-0.5 border-b border-gray-700">
+                            <span class="text-gray-400">前块哈希:</span>
+                            <span class="text-green-400 bg-black px-1 rounded">{{ hash1 }}</span>
+                        </div>
+                        
+                        <div class="flex items-center my-1.5">
+                            <span class="text-gray-400 w-8">数据:</span> 
+                            <div class="relative w-full">
+                                <input v-model="block2Data" 
+                                       :class="!isLinkBroken ? 'border-cyan-400 border-2 shadow-[0_0_8px_rgba(6,182,212,0.8)] text-cyan-200 animate-pulse' : 'border-red-500 border-2 text-red-200 shadow-[0_0_8px_rgba(239,68,68,0.5)]'"
+                                       class="bg-black rounded pl-1.5 pr-6 py-1 w-full outline-none focus:ring-1 focus:ring-white text-xs font-bold transition-all" />
+                                <span class="absolute right-1.5 top-1/2 transform -translate-y-1/2 pointer-events-none text-xs">
+                                    {{ !isLinkBroken ? '✏️' : '🚨' }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div :class="isLinkBroken ? 'bg-red-950 border-red-500' : 'bg-black border-gray-700'" class="flex justify-between items-center p-0.5 px-1 rounded border transition-colors">
+                            <span :class="isLinkBroken ? 'text-red-300' : 'text-gray-400'">本块哈希:</span>
+                            <span :class="isLinkBroken ? 'text-red-400 font-bold' : 'text-green-400'">{{ currentHash2 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center">
+                        <div v-if="!isLinkBroken" class="bg-cyan-950/40 border border-cyan-500/50 rounded p-1 w-11/12 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                            <div class="text-[8px] text-cyan-300 text-center font-bold">✅ 哈希完全相等</div>
+                            <div class="flex justify-center items-center space-x-1 font-mono text-[10px] mt-0.5">
+                                <div class="flex flex-col items-center w-[45%]">
+                                    <span class="text-[7px] text-gray-500">区#2 本块哈希</span>
+                                    <span class="text-green-400 break-all">{{ currentHash2 }}</span>
+                                </div>
+                                <span class="text-cyan-400 font-bold text-sm">=</span>
+                                <div class="flex flex-col items-center w-[45%]">
+                                    <span class="text-[7px] text-gray-500">区#3 前块哈希</span>
+                                    <span class="text-green-400 break-all">{{ originalHash2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="bg-red-950 border border-red-500 rounded p-1 w-11/12 shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse">
+                            <div class="text-[8px] text-red-300 text-center font-bold">❌ 哈希不相等，链条断裂！</div>
+                            <div class="flex justify-center items-center space-x-1 font-mono text-[10px] mt-0.5">
+                                <div class="flex flex-col items-center w-[45%]">
+                                    <span class="text-[7px] text-gray-500">区#2 新本块哈希</span>
+                                    <span class="text-red-400 line-through decoration-red-500 break-all">{{ currentHash2 }}</span>
+                                </div>
+                                <span class="text-white font-bold text-sm">≠</span>
+                                <div class="flex flex-col items-center w-[45%]">
+                                    <span class="text-[7px] text-gray-500">区#3 原前块哈希</span>
+                                    <span class="text-green-400 break-all">{{ originalHash2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div :class="isLinkBroken ? 'border-red-500 bg-red-900/40 opacity-50' : 'border-cyan-500 bg-gray-900'" class="border-2 rounded p-1.5 text-[10px] font-mono transition-all shadow-sm">
+                        <div class="font-bold mb-0.5" :class="isLinkBroken ? 'text-red-500' : 'text-cyan-400'">📦 区块 #3 (财务节点)</div>
+                        
+                        <div class="flex justify-between items-center mb-1 pb-0.5 border-b border-gray-700">
+                            <span class="text-gray-400">前块哈希:</span>
+                            <span class="text-green-400 bg-black px-1 rounded">{{ originalHash2 }}</span>
+                        </div>
+                        
+                        <div class="flex items-center my-1">
+                            <span class="text-gray-400 w-8">数据:</span> 
+                            <span class="text-white">财务打款金额：100万</span>
+                        </div>
+                        
+                        <div class="bg-black border-gray-700 flex justify-between items-center p-0.5 px-1 rounded border">
+                            <span class="text-gray-400">本块哈希:</span>
+                            <span class="text-green-400">8f9a2b4c1d</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-if="isLinkBroken" class="mt-2 text-[10px] text-red-300 bg-red-900/30 p-1 rounded text-center font-bold border border-red-800/50">
+                    🚨 拒绝承认假账！前序数据被篡改！
+                </div>
+            </div>
+
+            <div v-else-if="step === 4" class="flex flex-col h-full" key="step4">
+                <h2 class="text-lg font-bold text-cyan-400 mb-2">⛏️ 终局：谁来生成新区块？</h2>
+                <p class="text-xs text-gray-300 mb-3">为防止作恶，系统规定：谁先找到一个魔法数字 (Nonce)，让算出的哈希<strong class="text-green-400">以 "00" 开头</strong>，谁就有权记账（即挖矿）。</p>
+                
+                <div class="bg-black border-2 border-cyan-500/50 rounded-lg p-3 text-xs font-mono relative">
+                    <div class="mb-2 text-gray-400">准备打包的新区块记录：</div>
+                    <div class="mb-2 text-cyan-300">"{{ username }} 确认财务审计完成"</div>
+                    
+                    <div class="mb-2 flex items-center">
+                        <span class="text-gray-400 mr-2">尝试输入 Nonce:</span> 
+                        <input v-model.number="manualNonce" type="number" :disabled="isMining || isMined" class="bg-gray-800 border border-gray-600 rounded p-1 text-white w-24 outline-none focus:border-cyan-400" />
+                    </div>
+                    
+                    <div class="pt-2 border-t border-gray-700">
+                        <span class="text-gray-400">计算出的哈希:</span>
+                        <div :class="isMined ? 'text-green-400 font-bold' : 'text-red-400'" class="break-all mt-1">
+                            {{ currentMiningHash }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2 text-center h-4">
+                        <span v-if="isMined" class="text-green-400 font-bold animate-pulse">✅ 成功！发现合法区块！</span>
+                        <span v-else-if="manualNonce !== '' && manualNonce !== null" class="text-red-400">❌ 不符合要求 (未以 00 开头)</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 flex-grow flex flex-col justify-end">
+                    <p v-if="!isMined" class="text-[10px] text-gray-400 text-center mb-2">人类手算太慢了？让机器来代劳！</p>
+                    <button @click="autoMine" :disabled="isMining || isMined" class="bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-700 text-white font-bold py-3 px-4 rounded shadow-[0_0_15px_#06b6d4] transition w-full text-sm">
+                        {{ isMining ? '算力全开碰撞中...' : (isMined ? '打包完毕，全网节点已确认' : '启动 8x A100 GPU 集群 (自动挖矿)') }}
+                    </button>
+                </div>
+            </div>
+
+            <div v-else-if="step === 5" class="flex flex-col h-full items-center justify-center text-center" key="step5">
+                <div class="bg-gradient-to-br from-gray-900 to-blue-900/40 p-5 rounded-xl border border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.4)] w-full">
+                    <div class="text-4xl mb-2">🏆</div>
+                    <h2 class="text-lg font-bold text-white mb-1">创世特工认证</h2>
+                    <p class="text-[10px] text-cyan-200 mb-4">你在 Web3 x AI 信任实验室，见证了不可篡改的共识力量！</p>
+                    
+                    <div class="bg-black/60 rounded p-3 text-left font-mono text-[10px] mb-4 border border-gray-700">
+                        <p class="text-gray-400">👤 见证人: <input v-model="username" class="bg-transparent text-green-400 border-b border-gray-600 outline-none w-20" placeholder="你的昵称"></p>
+                        <p class="text-gray-400 mt-1">🔗 块高: 1024</p>
+                        <p class="text-gray-400 mt-1 break-all">🧬 Hash: {{ finalHash }}</p>
+                    </div>
+
+                    <div class="flex justify-center space-x-6 mb-2">
+                        <div class="flex flex-col items-center">
+                            <div class="w-[72px] h-[72px] bg-white p-1 rounded shadow-lg">
+                                <img src="./GroupChat.png" alt="群聊" class="w-full h-full object-contain">
+                            </div>
+                            <span class="text-[10px] font-bold text-white mt-2 bg-cyan-600 px-2 py-0.5 rounded-full">① 扫码进群</span>
+                        </div>
+                        
+                        <div class="flex flex-col items-center">
+                            <div class="w-[72px] h-[72px] bg-white p-1 rounded shadow-lg">
+                                <img src="./Form.jpg" alt="问卷" class="w-full h-full object-contain">
+                            </div>
+                            <span class="text-[10px] font-bold text-white mt-2 bg-blue-600 px-2 py-0.5 rounded-full">② 招新问卷</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] font-bold text-gray-400 mt-4">AI 是生产力，Web3 是生产关系。</p>
+            </div>
+
+        </transition>
+    </div>
+
+    <div class="mt-4 flex justify-between w-full items-center">
+        <button v-if="step > 1" @click="step--" class="text-gray-400 hover:text-white px-3 py-2 text-xs font-bold transition">&lt; 返回</button>
+        <div v-else class="w-12"></div>
+        
+        <div class="flex space-x-1">
+            <div v-for="i in 5" :key="i" :class="step >= i ? 'bg-cyan-400 shadow-[0_0_5px_#06b6d4]' : 'bg-gray-700'" class="h-1.5 w-5 rounded-full transition-all duration-300"></div>
+        </div>
+
+        <button v-if="step < 5" @click="step++" class="bg-cyan-500 text-black font-bold px-4 py-2 rounded shadow-[0_0_10px_#06b6d4] hover:bg-cyan-400 transition text-xs">
+            继续 &gt;
+        </button>
+        <button v-if="step === 5" @click="reset" class="text-cyan-400 border border-cyan-400 px-4 py-2 rounded hover:bg-cyan-900 transition text-xs">
+            重置体验
+        </button>
+    </div>
+
+</div>
+
+<script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            const step = ref(1);
+            const username = ref('SJTU 体验官');
+            
+            const hashDemoText = ref("仓储入库设备数量：100");
+            const demoHash = computed(() => {
+                return CryptoJS.SHA256(hashDemoText.value).toString(CryptoJS.enc.Hex);
+            });
+
+            const hash1 = "e3b0c44298";
+            const originalBlock2Data = "仓储入库设备数量：100";
+            const originalHash2 = CryptoJS.SHA256(originalBlock2Data + hash1).toString(CryptoJS.enc.Hex).substring(0, 10);
+            const block2Data = ref(originalBlock2Data);
+            
+            const currentHash2 = computed(() => {
+                return CryptoJS.SHA256(block2Data.value + hash1).toString(CryptoJS.enc.Hex).substring(0, 10);
+            });
+            const isLinkBroken = computed(() => {
+                return currentHash2.value !== originalHash2;
+            });
+
+            const manualNonce = ref(0);
+            const isMining = ref(false);
+            
+            const blockBaseData = computed(() => "BlockData_" + username.value);
+            
+            const currentMiningHash = computed(() => {
+                if (manualNonce.value === '' || manualNonce.value === null) return "等待输入...";
+                return CryptoJS.SHA256(blockBaseData.value + manualNonce.value.toString()).toString(CryptoJS.enc.Hex);
+            });
+
+            const isMined = computed(() => {
+                return currentMiningHash.value.startsWith('00');
+            });
+
+            const autoMine = () => {
+                if (isMined.value) return;
+                isMining.value = true;
+                
+                let attempt = manualNonce.value || 0;
+                
+                const stepMine = () => {
+                    for(let i = 0; i < 30; i++) { 
+                        attempt++;
+                        const hash = CryptoJS.SHA256(blockBaseData.value + attempt.toString()).toString(CryptoJS.enc.Hex);
+                        
+                        manualNonce.value = attempt;
+                        
+                        if (hash.startsWith('00')) {
+                            isMining.value = false;
+                            return;
+                        }
+                    }
+                    if (isMining.value) {
+                        requestAnimationFrame(stepMine);
+                    }
+                };
+                requestAnimationFrame(stepMine);
+            };
+
+            const finalHash = computed(() => isMined.value ? currentMiningHash.value : '0000a3f8c2...');
+
+            const reset = () => {
+                step.value = 1;
+                hashDemoText.value = "仓储入库设备数量：100";
+                block2Data.value = originalBlock2Data;
+                manualNonce.value = 0;
+            };
+
+            return {
+                step, username,
+                hashDemoText, demoHash,
+                hash1, originalBlock2Data, originalHash2, block2Data, currentHash2, isLinkBroken,
+                manualNonce, currentMiningHash, isMined, isMining, autoMine,
+                finalHash, reset
+            }
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
